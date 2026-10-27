@@ -17,11 +17,13 @@ Se cargan en ⚙️ y quedan **solo en el navegador de quien las carga** (no van
 |---|---|---|
 | **YouTube Data API v3** (necesaria) | Shorts virales + tendencias para las plantillas | https://console.cloud.google.com/apis/library/youtube.googleapis.com → Habilitar → https://console.cloud.google.com/apis/credentials → Crear credenciales → Clave de API |
 | **Gemini** (opcional) | Ideas con IA + investigación de tendencias en Google | https://aistudio.google.com/apikey |
+| **Groq** (opcional) | Respaldo gratis cuando Gemini no tiene cupo (Compound con búsqueda web → gpt-oss-120b → Llama 3.3 70B) | https://console.groq.com/keys |
 
 ### Ideas: IA + plantillas
 1. Si hay clave de Gemini, prueba `gemini-2.5-flash` → `gemini-2.5-flash-lite` (cada modelo tiene su propio cupo gratis).
-2. Si todos responden "sin cupo", la app deja de intentar hasta que se reinicia el cupo (~05:00 hora Argentina) y genera las ideas con **plantillas** (`js/templates.js`): formatos probados por objetivo + hashtags y palabras que se repiten en los Shorts virales encontrados. Sin límites.
-3. En ⚙️ se puede forzar "Usar solo plantillas".
+2. Si Gemini no tiene cupo, pasa a **Groq** (`groq/compound` → `openai/gpt-oss-120b` → `llama-3.3-70b-versatile`).
+3. Si tampoco hay cupo, la app deja de intentar hasta que se reinicia y genera las ideas con **plantillas** (`js/templates.js`): formatos probados por objetivo + hashtags y palabras que se repiten en los Shorts virales encontrados. Sin límites.
+4. En ⚙️ se puede forzar "Usar solo plantillas".
 
 Recomendado: en Google Cloud, **restringir la clave de YouTube** a *Sitios web (referentes HTTP)* con `https://TU-USUARIO.github.io/*`.
 

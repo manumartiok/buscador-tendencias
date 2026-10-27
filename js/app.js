@@ -45,7 +45,7 @@
   const ytShortsUrl = (q) => `https://www.youtube.com/results?search_query=${encodeURIComponent(q + ' #shorts')}&sp=EgQIBRAB`;
 
   /* ---------- Estado ---------- */
-  const DEFAULT_SETTINGS = { ytKey: '', geminiKey: '', model: 'gemini-2.5-flash', region: 'AR', grounding: true, templatesOnly: false };
+  const DEFAULT_SETTINGS = { ytKey: '', geminiKey: '', groqKey: '', model: 'gemini-2.5-flash', region: 'AR', grounding: true, templatesOnly: false };
   const GEMINI_FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
   const DEFAULT_ACCOUNTS = [
     {
@@ -84,6 +84,8 @@
     return JSON.parse(clean.slice(start, end + 1));
   }
 
+  const SYSTEM_PROMPT = 'Sos una community manager experta en Instagram (historias y reels) para marcas de Argentina. Conocés a fondo las tendencias virales actuales de TikTok, Instagram Reels y YouTube Shorts: formatos, audios, memes, frases y challenges. Escribís en español rioplatense, con ideas concretas y listas para producir con el celular. Respondés SOLO con JSON válido, sin markdown ni texto extra.';
+
   // ¿Se puede usar Gemini ahora? (hay clave, no está en "solo plantillas" y no está sin cupo)
   const geminiBlockedUntil = () => +store.get('geminiBlockedUntil', 0);
   const canUseGemini = () => !!state.settings.geminiKey && !state.settings.templatesOnly && Date.now() > geminiBlockedUntil();
@@ -117,7 +119,7 @@
 
   async function gemini(prompt) {
     const { geminiKey, model, grounding } = state.settings;
-    const system = 'Sos una community manager experta en Instagram (historias y reels) para marcas de Argentina. Conocés a fondo las tendencias virales actuales de TikTok, Instagram Reels y YouTube Shorts: formatos, audios, memes, frases y challenges. Escribís en español rioplatense, con ideas concretas y listas para producir con el celular. Respondés SOLO con JSON válido, sin markdown ni texto extra.';
+    const system = SYSTEM_PROMPT;
     const call = async (m, useSearch) => {
       const body = {
         systemInstruction: { parts: [{ text: system }] },
@@ -169,6 +171,65 @@
     const e = new Error(`${daily ? 'Gemini agotó el cupo gratis de hoy' : 'Gemini está saturado por un momento'} (${tried.join(' · ')}).`);
     e.quota = true;
     throw e;
+  }
+
+  /* ---------- Groq (respaldo gratis) ---------- */
+  const GROQ_MODELS = ['groq/compound', 'openai/gpt-oss-120b', 'llama-3.3-70b-versatile'];
+  const canUseGroq = () => !!state.settings.groqKey && !state.settings.templatesOnly && Date.now() > +store.get('groqBlockedUntil', 0);
+
+  async function groq(prompt) {
+    const tried = [];
+    let quota = false;
+    for (const m of GROQ_MODELS) {
+      const body = {
+        model: m,
+        temperature: 0.9,
+        max_completion_tokens: 6000,
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+        ...(m.startsWith('openai/gpt-oss') ? { reasoning_effort: 'low' } : {}),
+      };
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${state.settings.groqKey}` },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { const e = new Error(data?.error?.message || `Error ${res.status} de Groq`); e.status = res.status; throw e; }
+        const msg = data.choices?.[0]?.message || {};
+        const json = extractJSON(msg.content || '');
+        const sources = (msg.executed_tools || [])
+          .flatMap((t) => t?.search_results?.results || [])
+          .map((r) => ({ uri: r.url, title: r.title })).filter((r) => r.uri).slice(0, 8);
+        return { json, sources, model: m, provider: 'groq' };
+      } catch (e) {
+        console.warn(`[Groq] ${m}:`, e.message);
+        if (e.status === 401 || e.status === 403) throw new Error('La clave de Groq no es válida.');
+        if (e.status === 429) { quota = true; tried.push(`${m}: sin cupo`); continue; }
+        tried.push(`${m}: ${e.status === 404 ? 'no existe' : 'falló'}`);
+      }
+    }
+    if (quota) {
+      const d = new Date(); d.setUTCHours(24, 0, 0, 0); // Groq reinicia el cupo diario en UTC
+      store.set('groqBlockedUntil', tried.every((t) => /sin cupo/.test(t)) ? d.getTime() : Date.now() + 60000);
+    }
+    const e = new Error(`Groq no respondió (${tried.join(' · ')}).`);
+    e.quota = quota;
+    throw e;
+  }
+
+  // Orden: Gemini → Groq → (plantillas, fuera de esta función)
+  async function aiGenerate(prompt) {
+    const notes = [];
+    const anyKey = state.settings.geminiKey || state.settings.groqKey;
+    if (state.settings.templatesOnly || !anyKey) return { result: null, note: '' };
+    if (canUseGemini()) {
+      try { return { result: { ...(await gemini(prompt)), provider: 'gemini' }, note: '' }; } catch (e) { notes.push(e.message); }
+    } else if (state.settings.geminiKey) notes.push('Gemini sin cupo por ahora.');
+    if (canUseGroq()) {
+      try { return { result: await groq(prompt), note: notes.length ? `${notes.join(' ')} Se usó Groq.` : '' }; } catch (e) { notes.push(e.message); }
+    } else if (state.settings.groqKey) notes.push('Groq sin cupo por ahora.');
+    return { result: null, note: `${notes.join(' ')} Ideas armadas con plantillas.`.trim() };
   }
 
   const JSON_SHAPE = `{
@@ -383,8 +444,6 @@ ${JSON_SHAPE}`;
     store.set('tplUsed', all);
     return r;
   }
-  const aiFailNote = (e, what) => `${e.quota ? e.message : `Gemini: ${e.message}.`} ${what} con plantillas.`;
-  const aiSkippedNote = (what) => (state.settings.geminiKey && !state.settings.templatesOnly ? `Gemini sin cupo por ahora: ${what} con plantillas.` : '');
 
   async function doSearch(preset) {
     const q = (preset?.q ?? $('#q').value).trim();
@@ -396,14 +455,13 @@ ${JSON_SHAPE}`;
     const days = +$('#period').value;
     const btn = $('#btnSearch');
     btn.disabled = true;
-    $('#results').innerHTML = loadingHTML(canUseGemini() ? 'Investigando tendencias y armando ideas…' : 'Buscando videos virales…');
+    $('#results').innerHTML = loadingHTML('Buscando…');
     state.yt = { queries: [], tokens: {}, ids: new Set(), videos: [], error: '' };
 
     let ai = null;
     let aiNote = '';
-    if (canUseGemini()) {
-      try { ai = await gemini(searchPrompt({ q, goal, days })); } catch (e) { aiNote = aiFailNote(e, 'Ideas armadas'); }
-    } else aiNote = aiSkippedNote('ideas armadas');
+    if (canUseGemini() || canUseGroq()) $('#results').innerHTML = loadingHTML('Investigando tendencias y armando ideas…');
+    ({ result: ai, note: aiNote } = await aiGenerate(searchPrompt({ q, goal, days })));
 
     const data = ai?.json || {};
     const queries = (Array.isArray(data.busquedas_videos) && data.busquedas_videos.length ? data.busquedas_videos : fallbackQueries(q, goal)).slice(0, 4);
@@ -413,7 +471,7 @@ ${JSON_SHAPE}`;
       try { state.yt.videos = await ytSearchPage(queries, days); } catch (e) { state.yt.error = e.message; }
     }
 
-    const source = data.ideas?.length ? 'ia' : 'plantillas';
+    const source = data.ideas?.length ? (ai?.provider || 'ia') : 'plantillas';
     if (source === 'plantillas') {
       const t = templateResult({ q, goal, videos: state.yt.videos });
       data.ideas = t.ideas;
@@ -435,7 +493,8 @@ ${JSON_SHAPE}`;
     renderVideos();
   }
 
-  const sourceTag = (src) => `<span class="tag ${src === 'ia' ? '' : 'alt'}">${src === 'ia' ? 'IA' : 'Plantillas'}</span>`;
+  const SOURCE_LABEL = { gemini: 'Gemini', groq: 'Groq', ia: 'IA', plantillas: 'Plantillas' };
+  const sourceTag = (src) => `<span class="tag ${src === 'plantillas' ? 'alt' : ''}">${SOURCE_LABEL[src] || 'IA'}</span>`;
 
   const trendsHTML = (list) => `<div class="trends">${list.map((t) => `<div class="trend"><b>${esc(t.nombre)}</b><span class="muted small">${esc(t.descripcion)}</span></div>`).join('')}</div>`;
 
@@ -511,9 +570,9 @@ ${JSON_SHAPE}`;
 
     let json = null;
     let note = '';
-    if (canUseGemini()) {
-      try { json = (await gemini(planPrompt())).json; } catch (e) { note = aiFailNote(e, 'Plan armado'); }
-    } else note = aiSkippedNote('plan armado');
+    const gen = await aiGenerate(planPrompt());
+    json = gen.result?.json || null;
+    note = gen.note.replace('Ideas armadas', 'Plan armado');
 
     let videos = [];
     if (ytKey) {
@@ -521,7 +580,7 @@ ${JSON_SHAPE}`;
       try { videos = await ytSearchPage(queries, 7, { tokens: {}, ids: new Set() }); } catch (e) { note = `${note} ${e.message}`.trim(); }
     }
 
-    let source = 'ia';
+    let source = gen.result?.provider || 'ia';
     if (!json?.ideas?.length) {
       source = 'plantillas';
       const t = templateResult({ plan: true, videos });
@@ -635,7 +694,7 @@ ${JSON_SHAPE}`;
 
   function openSettings() {
     const s = state.settings;
-    $('#setYt').value = s.ytKey; $('#setGem').value = s.geminiKey;
+    $('#setYt').value = s.ytKey; $('#setGem').value = s.geminiKey; $('#setGroq').value = s.groqKey || '';
     $('#setModel').value = s.model; $('#setRegion').value = s.region; $('#setGround').checked = !!s.grounding; $('#setTplOnly').checked = !!s.templatesOnly;
     draftAccounts = state.accounts.map((a) => ({ ...a }));
     renderAccountsEdit();
@@ -649,7 +708,7 @@ ${JSON_SHAPE}`;
 
   function saveSettings() {
     state.settings = {
-      ytKey: $('#setYt').value.trim(), geminiKey: $('#setGem').value.trim(),
+      ytKey: $('#setYt').value.trim(), geminiKey: $('#setGem').value.trim(), groqKey: $('#setGroq').value.trim(),
       model: $('#setModel').value.trim() || DEFAULT_SETTINGS.model,
       region: ($('#setRegion').value.trim() || 'AR').toUpperCase(), grounding: $('#setGround').checked,
       templatesOnly: $('#setTplOnly').checked,
@@ -657,6 +716,7 @@ ${JSON_SHAPE}`;
     store.set('settings', state.settings);
     store.set('geminiBlockedUntil', 0); // al cambiar la config se reintenta Gemini
     store.set('geminiModels', null);
+    store.set('groqBlockedUntil', 0);
     const accs = draftAccounts.filter((a) => a.name.trim()).map((a) => ({ ...a, name: a.name.trim(), emoji: a.emoji.trim() || '✨' }));
     state.accounts = accs.length ? accs : DEFAULT_ACCOUNTS;
     if (!state.accounts.find((a) => a.id === state.accountId)) state.accountId = state.accounts[0].id;
