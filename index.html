@@ -100,13 +100,14 @@
       <div class="row">
         <div class="grow">
           <label class="label small" for="setModel">Modelo Gemini</label>
-          <input id="setModel" type="text" placeholder="gemini-2.5-flash">
+          <input id="setModel" type="text" list="modelList" placeholder="gemini-2.5-flash"><datalist id="modelList"></datalist>
         </div>
         <div style="width:90px">
           <label class="label small" for="setRegion">País</label>
           <input id="setRegion" type="text" maxlength="2" placeholder="AR">
         </div>
       </div>
+      <p id="modelHint" class="muted tiny"></p>
       <label class="check"><input type="checkbox" id="setGround"> Investigar tendencias actuales en Google (recomendado)</label>
       <label class="check"><input type="checkbox" id="setTplOnly"> Usar solo plantillas (sin IA)</label>
 

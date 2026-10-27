@@ -96,6 +96,25 @@
     return d.getTime();
   }
 
+  // Modelos de texto "flash" que la clave realmente puede usar (cache 12 h)
+  async function listGeminiModels(force) {
+    const key = state.settings.geminiKey;
+    if (!key) return [];
+    const cache = store.get('geminiModels', null);
+    if (!force && cache && cache.k === key.slice(-6) && Date.now() - cache.at < 43200000) return cache.models;
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', { headers: { 'x-goog-api-key': key } });
+    if (!res.ok) throw new Error(`Error ${res.status} al listar modelos`);
+    const data = await res.json();
+    const ver = (n) => parseFloat((/gemini-(\d+(?:\.\d+)?)/.exec(n) || [])[1] || 0);
+    const models = (data.models || [])
+      .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
+      .map((m) => m.name.replace(/^models\//, ''))
+      .filter((n) => /^gemini-/.test(n) && /flash/.test(n) && !/image|tts|audio|live|embed|thinking|exp|computer|robotics|native/.test(n))
+      .sort((a, b) => (/preview/.test(a) - /preview/.test(b)) || (/lite/.test(a) - /lite/.test(b)) || (ver(b) - ver(a)) || (/latest/.test(b) - /latest/.test(a)));
+    store.set('geminiModels', { k: key.slice(-6), at: Date.now(), models });
+    return models;
+  }
+
   async function gemini(prompt) {
     const { geminiKey, model, grounding } = state.settings;
     const system = 'Sos una community manager experta en Instagram (historias y reels) para marcas de Argentina. Conocés a fondo las tendencias virales actuales de TikTok, Instagram Reels y YouTube Shorts: formatos, audios, memes, frases y challenges. Escribís en español rioplatense, con ideas concretas y listas para producir con el celular. Respondés SOLO con JSON válido, sin markdown ni texto extra.';
@@ -120,25 +139,32 @@
       return { json: extractJSON(text), sources, model: m };
     };
 
-    const models = [...new Set([model || DEFAULT_SETTINGS.model, ...GEMINI_FALLBACK_MODELS])];
+    const available = await listGeminiModels().catch(() => []);
+    const preferred = [model || DEFAULT_SETTINGS.model, ...GEMINI_FALLBACK_MODELS];
+    // Si conocemos la lista real, usamos solo modelos que existen (los preferidos primero)
+    const models = available.length
+      ? [...new Set([...preferred.filter((m) => available.includes(m)), ...available])].slice(0, 4)
+      : [...new Set(preferred)];
     let lastQuotaMsg = '';
     const tried = [];
     for (const m of models) {
       try {
         if (grounding) {
           try { return await call(m, true); }
-          catch (e) { if (e.status === 429 || e.status === 401 || e.status === 403) throw e; }
+          catch (e) { if ([401, 403, 404, 429].includes(e.status)) throw e; } // otro error con búsqueda → reintento sin búsqueda
         }
         return await call(m, false);
       } catch (e) {
-        if (e.status === 401 || e.status === 403 || (e.status === 400 && /api key/i.test(e.message))) throw e; // clave inválida
-        if (e.status === 429) { lastQuotaMsg = e.message; tried.push(`${m}: ${/limit:\s*0\b/.test(e.message) ? 'no disponible en el plan gratis' : 'sin cupo'}`); console.warn(`[Gemini] ${m}:`, e.message); continue; } // → siguiente modelo
-        if (e.status === 404) continue; // modelo inexistente → siguiente
+        console.warn(`[Gemini] ${m}:`, e.message);
+        if (e.status === 401 || e.status === 403 || (e.status === 400 && /api key/i.test(e.message))) throw new Error('La clave de Gemini no es válida o no tiene permiso.');
+        if (e.status === 429) { lastQuotaMsg = e.message; tried.push(`${m}: ${/limit:\s*0\b/.test(e.message) ? 'no disponible en el plan gratis' : 'sin cupo'}`); continue; }
+        if (e.status === 404) { tried.push(`${m}: no existe`); continue; }
         throw e;
       }
     }
+    if (!lastQuotaMsg) throw new Error(`Ningún modelo de Gemini respondió (${tried.join(' · ')}). Revisá el modelo en ⚙️.`);
     // Todos los modelos sin cupo: no volver a intentar hasta que se libere
-    const daily = /per\s*day|PerDay|daily/i.test(lastQuotaMsg);
+    const daily = /per\s*day|PerDay|daily|limit:\s*0\b/i.test(lastQuotaMsg);
     store.set('geminiBlockedUntil', daily ? nextQuotaReset() : Date.now() + 60000);
     const e = new Error(`${daily ? 'Gemini agotó el cupo gratis de hoy' : 'Gemini está saturado por un momento'} (${tried.join(' · ')}).`);
     e.quota = true;
@@ -614,6 +640,11 @@ ${JSON_SHAPE}`;
     draftAccounts = state.accounts.map((a) => ({ ...a }));
     renderAccountsEdit();
     if (!$('#dlgSettings').open) $('#dlgSettings').showModal();
+    if (s.geminiKey) {
+      listGeminiModels(true)
+        .then((ms) => { $('#modelList').innerHTML = ms.map((m) => `<option value="${esc(m)}">`).join(''); $('#modelHint').textContent = ms.length ? `Disponibles: ${ms.slice(0, 6).join(', ')}` : ''; })
+        .catch(() => { $('#modelHint').textContent = 'No se pudo leer la lista de modelos (¿clave válida?).'; });
+    }
   }
 
   function saveSettings() {
@@ -625,6 +656,7 @@ ${JSON_SHAPE}`;
     };
     store.set('settings', state.settings);
     store.set('geminiBlockedUntil', 0); // al cambiar la config se reintenta Gemini
+    store.set('geminiModels', null);
     const accs = draftAccounts.filter((a) => a.name.trim()).map((a) => ({ ...a, name: a.name.trim(), emoji: a.emoji.trim() || '✨' }));
     state.accounts = accs.length ? accs : DEFAULT_ACCOUNTS;
     if (!state.accounts.find((a) => a.id === state.accountId)) state.accountId = state.accounts[0].id;
