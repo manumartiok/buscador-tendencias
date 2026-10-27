@@ -17,10 +17,10 @@
         sticker: 'Quiz: pregunta fácil sobre {cuenta} con 3 opciones', cta: 'Respondé bien y ya participás', por_que: 'La urgencia de 24 h hace que respondan en el momento en vez de dejarlo para después.' },
     ],
     venta: [
-      { id: 'ven1', titulo: 'Oferta con cuenta regresiva', formato: 'cuenta regresiva', gancho: 'Esto dura poco ⏳ {tema|[tu oferta]}',
-        historias: ['Mostrá el producto/servicio en uso con un audio en tendencia', 'Precio tachado vs precio de hoy, bien grande', 'Cuenta regresiva + cómo comprar (DM o link)'],
+      { id: 'ven1', titulo: 'Oferta con cuenta regresiva', formato: 'cuenta regresiva', gancho: 'Esto dura poco ⏳ Promo en {tema|producto|[tu oferta]}',
+        historias: ['Mostrá {producto|el producto/servicio} con un audio en tendencia', 'Precio tachado vs precio de hoy, bien grande', 'Cuenta regresiva + cómo comprar (DM o link)'],
         sticker: 'Cuenta regresiva: "Termina la promo"', cta: 'Escribinos "QUIERO" por DM', por_que: 'La cuenta regresiva activa recordatorios y genera urgencia real.' },
-      { id: 'ven2', titulo: 'Encuesta antes de la promo', formato: 'encuesta', gancho: '¿Y si les hago precio en {tema|[producto]}? 🤔',
+      { id: 'ven2', titulo: 'Encuesta antes de la promo', formato: 'encuesta', gancho: '¿Y si les hago precio en {tema|producto|[producto]}? 🤔',
         historias: ['Encuesta: "¿Lo quieren con descuento?" (SÍ / OBVIO)', 'Mostrá el resultado de la encuesta con texto: "ustedes lo pidieron"', 'Revelá la promo y cómo aprovecharla'],
         sticker: 'Encuesta: SÍ 🙌 / OBVIO 🔥', cta: 'Respondé la encuesta y te aviso primero', por_que: 'Quien vota ya se comprometió; la venta posterior se siente pedida por la comunidad.' },
       { id: 'ven3', titulo: 'Prueba social + link', formato: 'link', gancho: 'Lo que dicen de {tema|nosotros} 👇',
@@ -28,14 +28,14 @@
         sticker: 'Link: "Lo quiero"', cta: 'Tocá el link y asegurá el tuyo', por_que: 'Las opiniones de clientes reales bajan la desconfianza antes de comprar.' },
     ],
     interactiva: [
-      { id: 'int1', titulo: 'Quiz: ¿cuánto sabés?', formato: 'quiz', gancho: '¿Cuánto sabés de {tema|esto}? 🧠',
+      { id: 'int1', titulo: 'Quiz: ¿cuánto sabés?', formato: 'quiz', gancho: '¿Cuánto sabés de {tema|rubro|esto}? 🧠',
         historias: ['Pregunta 1 con quiz de 3 opciones', 'Pregunta 2 un poco más difícil', 'Resultado: "si acertaste las 2, sos de los nuestros"'],
         sticker: 'Quiz con 3 opciones (una graciosa)', cta: 'Contanos cuántas acertaste', por_que: 'Los quiz suben el tiempo de visualización y el alcance de las historias siguientes.' },
       { id: 'int2', titulo: 'Esto o aquello', formato: 'encuesta', gancho: '¿Team A o team B? 👀',
-        historias: ['Foto dividida en dos opciones relacionadas con {tema|la cuenta}', 'Encuesta con las dos opciones', 'Al final del día: mostrá cuál ganó'],
+        historias: ['Foto dividida en dos opciones relacionadas con {tema|rubro|la cuenta}', 'Encuesta con las dos opciones', 'Al final del día: mostrá cuál ganó'],
         sticker: 'Encuesta: opción A / opción B', cta: 'Votá y defendé tu team por DM', por_que: 'Decidir entre dos opciones es la interacción más rápida y la que más gente responde.' },
       { id: 'int3', titulo: 'Slider: ¿cuánto te identifica?', formato: 'slider', gancho: '¿Cuánto te identifica esto? 😂',
-        historias: ['Frase o situación muy reconocible sobre {tema|el rubro}', 'Slider con emoji', 'Compartí resultados o reacciones'],
+        historias: ['Frase o situación muy reconocible sobre {tema|rubro|el rubro}', 'Slider con emoji', 'Compartí resultados o reacciones'],
         sticker: 'Slider con emoji 😅', cta: 'Mandáselo a quien le pasa', por_que: 'Lo identificable se comparte por DM, que es la señal que más pesa en el alcance.' },
       { id: 'int4', titulo: 'Caja de preguntas', formato: 'pregunta', gancho: 'Preguntame lo que quieras sobre {tema|{cuenta}} 💬',
         historias: ['Caja de preguntas con fondo llamativo', 'Respondé 3–5 preguntas con video o texto', 'Cerrá con una respuesta que lleve a la venta o reserva'],
@@ -46,18 +46,18 @@
         historias: ['Texto grande con la opinión impopular', 'Encuesta: "De acuerdo / Ni ahí"', 'Respondé algunos DMs de los que no están de acuerdo'],
         sticker: 'Encuesta: De acuerdo ✅ / Ni ahí ❌', cta: 'Defendé tu postura por DM', por_que: 'Las opiniones divididas generan muchas respuestas y debate.' },
       { id: 'pol2', titulo: 'Mito o verdad', formato: 'quiz', gancho: '¿Mito o verdad? 🤔 {tema|[afirmación polémica]}',
-        historias: ['Afirmación polémica sobre el rubro', 'Quiz: Mito / Verdad', 'Revelá la respuesta con una explicación corta'],
+        historias: ['Afirmación polémica sobre {rubro|el rubro}', 'Quiz: Mito / Verdad', 'Revelá la respuesta con una explicación corta'],
         sticker: 'Quiz: Mito / Verdad', cta: 'Seguinos para más mitos', por_que: 'Combina polémica con dato útil: engancha sin quemar la imagen de la marca.' },
       { id: 'pol3', titulo: 'Red flag o green flag', formato: 'encuesta', gancho: '¿Red flag o green flag? 🚩💚',
-        historias: ['Situación relacionada con {tema|el rubro} en texto', 'Encuesta: 🚩 / 💚', 'Resultado + tu opinión'],
+        historias: ['Situación relacionada con {tema|rubro|el rubro} en texto', 'Encuesta: 🚩 / 💚', 'Resultado + tu opinión'],
         sticker: 'Encuesta: 🚩 Red flag / 💚 Green flag', cta: 'Mandale esto a quien es red flag', por_que: 'Formato viral muy reconocible que invita a votar y compartir.' },
     ],
     humor: [
-      { id: 'hum1', titulo: 'POV en tendencia', formato: 'video/reel', gancho: 'POV: {tema|[situación graciosa del rubro]} 😂',
+      { id: 'hum1', titulo: 'POV en tendencia', formato: 'video/reel', gancho: 'POV: {tema|[situación graciosa]} 😂',
         historias: ['Video corto actuando la situación con un audio en tendencia', 'Texto POV arriba, bien grande', 'Slider de emoji para reaccionar'],
         sticker: 'Slider 😂', cta: 'Etiquetá a quien le pasa', por_que: 'Los POV con audio en tendencia son de lo que más se comparte por DM.' },
       { id: 'hum2', titulo: 'Expectativa vs realidad', formato: 'secuencia de historias', gancho: 'Expectativa vs realidad 💀',
-        historias: ['Expectativa: la versión perfecta de {tema|lo que hacemos}', 'Realidad: la versión graciosa/real', 'Encuesta: "¿Cuál sos vos?"'],
+        historias: ['Expectativa: la versión perfecta de {tema|producto|lo que hacemos}', 'Realidad: la versión graciosa/real', 'Encuesta: "¿Cuál sos vos?"'],
         sticker: 'Encuesta: Expectativa / Realidad', cta: 'Contanos tu realidad por DM', por_que: 'El humor autocrítico humaniza la cuenta y genera respuestas.' },
       { id: 'hum3', titulo: 'Tipos de personas', formato: 'secuencia de historias', gancho: 'Tipos de personas en {cuenta} 😅',
         historias: ['Tipo 1 con foto/video y texto corto', 'Tipo 2 y tipo 3', 'Encuesta o quiz: "¿Cuál sos?"'],
@@ -80,10 +80,10 @@
         sticker: 'Pregunta: "¿Qué querés ver ahora?"', cta: 'Pedinos el tuyo por DM', por_que: 'Los procesos tienen alta retención: la gente quiere ver el final.' },
     ],
     tip: [
-      { id: 'tip1', titulo: '3 tips rápidos', formato: 'secuencia de historias', gancho: '3 tips de {tema|[tema]} que nadie te dice 👇',
+      { id: 'tip1', titulo: '3 tips rápidos', formato: 'secuencia de historias', gancho: '3 tips de {tema|rubro|[tema]} que nadie te dice 👇',
         historias: ['Tip 1 con texto grande', 'Tip 2', 'Tip 3 + "guardalo para después"'],
         sticker: 'Slider: "¿Te sirvió?"', cta: 'Compartilo con quien lo necesita', por_que: 'El contenido útil se guarda y se comparte.' },
-      { id: 'tip2', titulo: 'El error más común', formato: 'quiz', gancho: 'El error que todos cometen con {tema|esto} ❌',
+      { id: 'tip2', titulo: 'El error más común', formato: 'quiz', gancho: 'El error que todos cometen con {tema|rubro|esto} ❌',
         historias: ['Quiz: "¿Cuál es el error?" con 3 opciones', 'Respuesta + cómo hacerlo bien', 'CTA a consultar por DM'],
         sticker: 'Quiz con 3 opciones', cta: 'Consultanos por DM', por_que: 'Corregir un error genera autoridad y respuestas.' },
     ],
@@ -159,9 +159,51 @@
 
   const fmt = new Intl.NumberFormat('es-AR', { notation: 'compact', maximumFractionDigits: 1 });
 
-  // {tema|fallback}: el fallback puede contener otro placeholder simple, ej {tema|{cuenta}}
+  // {a|b|texto}: usa la primera variable con valor; si ninguna tiene, el texto literal
+  const VAR_NAMES = new Set(['tema', 'cuenta', 'producto', 'rubro']);
   function fill(str, vars) {
-    return String(str).replace(/\{(\w+)(?:\|((?:[^{}]|\{\w+\})*))?\}/g, (_, k, fb) => (vars[k] ? vars[k] : fb != null ? fill(fb, vars) : ''));
+    return String(str).replace(/\{([^{}]*(?:\{\w+\}[^{}]*)*)\}/g, (_, body) => {
+      for (const part of body.split('|')) {
+        const name = part.trim().replace(/^\{(\w+)\}$/, '$1');
+        if (VAR_NAMES.has(name)) { if (vars[name]) return vars[name]; continue; }
+        return fill(part, vars);
+      }
+      return '';
+    });
+  }
+
+  // Saca rubro, producto y palabras clave del contexto que se carga en ⚙️
+  const CTX_STOP = new Set(('cuenta instagram publico público objetivo objetivos tono generar mostrar historias historia suben sube dias días por para como cómo con sin una unos unas los las del que muy mas más todo toda todos todas este esta esto entre sobre hasta desde cada gente zona quiere quieren empezar actuales nuevos nuevas ' +
+    'cercano cercana seguro divertido divertida motivador humor argentino argentina interaccion interacción comunidad vender venta ventas marca completá rubro exacto mujeres hombres jóvenes jovenes clientes socios edad años tendencia estética estetica').split(' '));
+
+  function parseContext(context, name) {
+    const c = String(context || '');
+    const clean = (x) => (x || '').replace(/\s+/g, ' ').trim().replace(/^(un|una|el|la|los|las)\s+/i, '');
+    const rubro = clean((/(?:cuenta de instagram de|marca de|tienda de|negocio de|local de|emprendimiento de|somos)\s+(?:un|una|el|la)?\s*([^.,;:()"]{3,40}?)(?=\s+(?:en|para|con|que|de\s+\p{Lu})\b|[.,;:()"]|$)/iu.exec(c) || [])[1]);
+    // Toma la lista hasta el punto y corta en el primer verbo en infinitivo ("generar comunidad") o en "con/para"
+    const rawProd = (/(?:vender|vendemos|vende|venta de|productos?|servicios?|ofrecemos)\s*:?\s+([^.;()"]{3,80})/i.exec(c) || [])[1] || '';
+    const segs = [];
+    for (const seg of rawProd.split(',')) {
+      const t = seg.trim();
+      if (!t || /^\p{L}+(ar|er|ir)\b/iu.test(t)) break;
+      segs.push(t.split(/\s+(?:con|para|a todo|en todo)\s+/i)[0]);
+      if (segs.length >= 4) break;
+    }
+    const producto = clean(segs.join(', ')).replace(/^(de|las|los)\s+/i, '');
+    const counts = new Map();
+    c.toLowerCase().split(/[^\p{L}]+/u).forEach((w) => {
+      if (w.length >= 5 && !CTX_STOP.has(w) && w !== String(name || '').toLowerCase()) counts.set(w, (counts.get(w) || 0) + 1);
+    });
+    const keywords = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([w]) => w).slice(0, 6);
+    return { rubro: rubro.toLowerCase(), producto: producto.toLowerCase(), keywords };
+  }
+
+  // Búsquedas para YouTube basadas en el contexto (no solo el nombre de la cuenta)
+  function contextQueries(context, name) {
+    const ctx = parseContext(context, name);
+    const main = ctx.rubro || ctx.keywords[0] || name;
+    const qs = [main, ctx.producto && ctx.producto !== main ? ctx.producto : ctx.keywords.slice(0, 2).join(' ')].filter(Boolean);
+    return [...new Set(qs)].slice(0, 2);
   }
 
   function pick(list, used, n) {
@@ -170,14 +212,15 @@
   }
 
   /**
-   * @param {object} o { q, goal (etiqueta del chip), accountName, videos, used:Set<id>, plan:boolean }
+   * @param {object} o { q, goal (etiqueta del chip), accountName, context, videos, used:Set<id>, plan:boolean }
    */
   function generate(o) {
     const used = o.used || new Set();
     const a = analyzeVideos(o.videos);
     const topKw = a.keywords[0]?.name;
     const topTag = a.hashtags[0]?.name;
-    const vars = { tema: o.plan ? '' : cleanTema(o.q), cuenta: o.accountName || 'la cuenta' };
+    const ctx = parseContext(o.context, o.accountName);
+    const vars = { tema: o.plan ? '' : cleanTema(o.q), cuenta: o.accountName || 'la cuenta', rubro: ctx.rubro, producto: ctx.producto };
 
     let cats;
     if (o.plan) {
@@ -223,5 +266,5 @@
     return { tendencias, ideas, hashtags: a.hashtags.map((h) => h.name).slice(0, 8), usedIds: chosen.slice(0, 3).map((t) => t.id) };
   }
 
-  window.TemplateEngine = { generate, analyzeVideos, cleanTema };
+  window.TemplateEngine = { generate, analyzeVideos, cleanTema, parseContext, contextQueries };
 })();

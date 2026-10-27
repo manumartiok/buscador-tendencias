@@ -432,13 +432,14 @@ ${JSON_SHAPE}`;
 
   function fallbackQueries(q, goal) {
     const base = q.replace(/quiero hacer (una )?historia (para|de|sobre)?( un| una)?/i, '').trim() || q;
-    return [...new Set([base, `${base} ${goal || ''}`.trim(), `${account().name} ${base}`])].slice(0, 3);
+    const ctxMain = window.TemplateEngine.contextQueries(account().context, account().name)[0];
+    return [...new Set([base, `${base} ${goal || ''}`.trim(), `${ctxMain} ${base}`])].slice(0, 3);
   }
 
   // Plantillas: rota para no repetir las últimas usadas por cuenta
   const usedTemplates = () => new Set(store.get('tplUsed', {})[state.accountId] || []);
   function templateResult({ q, goal, videos, plan }) {
-    const r = window.TemplateEngine.generate({ q, goal, plan, accountName: account().name, videos, used: usedTemplates() });
+    const r = window.TemplateEngine.generate({ q, goal, plan, accountName: account().name, context: account().context, videos, used: usedTemplates() });
     const all = store.get('tplUsed', {});
     all[state.accountId] = [...r.usedIds, ...(all[state.accountId] || [])].slice(0, 12);
     store.set('tplUsed', all);
@@ -576,7 +577,7 @@ ${JSON_SHAPE}`;
 
     let videos = [];
     if (ytKey) {
-      const queries = json?.busquedas_videos?.length ? json.busquedas_videos.slice(0, 2) : [account().name];
+      const queries = json?.busquedas_videos?.length ? json.busquedas_videos.slice(0, 2) : window.TemplateEngine.contextQueries(account().context, account().name);
       try { videos = await ytSearchPage(queries, 7, { tokens: {}, ids: new Set() }); } catch (e) { note = `${note} ${e.message}`.trim(); }
     }
 
