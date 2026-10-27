@@ -122,6 +122,7 @@
 
     const models = [...new Set([model || DEFAULT_SETTINGS.model, ...GEMINI_FALLBACK_MODELS])];
     let lastQuotaMsg = '';
+    const tried = [];
     for (const m of models) {
       try {
         if (grounding) {
@@ -131,7 +132,7 @@
         return await call(m, false);
       } catch (e) {
         if (e.status === 401 || e.status === 403 || (e.status === 400 && /api key/i.test(e.message))) throw e; // clave inválida
-        if (e.status === 429) { lastQuotaMsg = e.message; continue; } // sin cupo en este modelo → siguiente
+        if (e.status === 429) { lastQuotaMsg = e.message; tried.push(`${m}: ${/limit:\s*0\b/.test(e.message) ? 'no disponible en el plan gratis' : 'sin cupo'}`); console.warn(`[Gemini] ${m}:`, e.message); continue; } // → siguiente modelo
         if (e.status === 404) continue; // modelo inexistente → siguiente
         throw e;
       }
@@ -139,7 +140,7 @@
     // Todos los modelos sin cupo: no volver a intentar hasta que se libere
     const daily = /per\s*day|PerDay|daily/i.test(lastQuotaMsg);
     store.set('geminiBlockedUntil', daily ? nextQuotaReset() : Date.now() + 60000);
-    const e = new Error(daily ? 'Gemini agotó el cupo gratis de hoy.' : 'Gemini está saturado por un momento.');
+    const e = new Error(`${daily ? 'Gemini agotó el cupo gratis de hoy' : 'Gemini está saturado por un momento'} (${tried.join(' · ')}).`);
     e.quota = true;
     throw e;
   }
