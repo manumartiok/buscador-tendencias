@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Buscador de Tendencias</title>
+  <meta name="description" content="Tendencias virales de Shorts, Reels y TikTok para armar historias de Instagram.">
+  <meta name="theme-color" content="#0c0b10">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">🔥</span><span class="brand-name">Tendencias</span></div>
+    <div id="accounts" class="accounts"></div>
+    <button id="btnSettings" class="icon-btn" title="Configuración" aria-label="Configuración">⚙️</button>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="buscar">Buscar</button>
+    <button class="tab" data-tab="plan">Plan del día</button>
+    <button class="tab" data-tab="guardados">Guardados <span id="savedCount" class="badge">0</span></button>
+  </nav>
+
+  <main>
+    <!-- BUSCAR -->
+    <section id="tab-buscar" class="panel active">
+      <div class="card search-card">
+        <label for="q" class="label">¿Qué historia querés hacer?</label>
+        <textarea id="q" rows="3" placeholder="Ej: quiero hacer una historia para un sorteo de un mes gratis"></textarea>
+        <div class="label small">Objetivo <span class="muted">(opcional)</span></div>
+        <div id="goals" class="chips"></div>
+        <div class="row">
+          <select id="period" aria-label="Período">
+            <option value="7">Últimos 7 días</option>
+            <option value="14" selected>Últimos 14 días</option>
+            <option value="30">Últimos 30 días</option>
+          </select>
+          <button id="btnSearch" class="btn primary grow">Buscar tendencias</button>
+        </div>
+        <div id="setupHint" class="hint hidden"></div>
+      </div>
+      <div id="results"></div>
+    </section>
+
+    <!-- PLAN -->
+    <section id="tab-plan" class="panel">
+      <div class="card plan-head">
+        <div>
+          <h2 id="planTitle">Plan de hoy</h2>
+          <p id="planDate" class="muted"></p>
+        </div>
+        <button id="btnPlan" class="btn primary">Generar 3 historias</button>
+      </div>
+      <div id="planBody"></div>
+    </section>
+
+    <!-- GUARDADOS -->
+    <section id="tab-guardados" class="panel">
+      <div class="card add-link">
+        <label class="label small" for="addUrl">Guardar un link (TikTok, Reel, Short…)</label>
+        <div class="row">
+          <input id="addUrl" type="url" placeholder="Pegá el link del video">
+          <button id="btnAddUrl" class="btn">Guardar</button>
+        </div>
+      </div>
+      <div class="saved-head">
+        <div class="seg" id="savedFilter">
+          <button class="active" data-f="all">Todo</button>
+          <button data-f="video">Videos</button>
+          <button data-f="idea">Ideas</button>
+        </div>
+        <label class="check"><input type="checkbox" id="savedAllAccounts"> Todas las cuentas</label>
+      </div>
+      <div id="savedBody"></div>
+    </section>
+  </main>
+
+  <!-- CONFIGURACIÓN -->
+  <dialog id="dlgSettings" class="dialog">
+    <form method="dialog" class="dialog-inner">
+      <div class="dialog-head">
+        <h2>Configuración</h2>
+        <button value="cancel" class="icon-btn" aria-label="Cerrar">✕</button>
+      </div>
+
+      <h3>Claves API</h3>
+      <p class="muted small">Se guardan solo en este navegador, nunca en el código ni en GitHub.</p>
+      <label class="label small" for="setYt">YouTube Data API v3 key</label>
+      <input id="setYt" type="password" autocomplete="off" placeholder="AIza...">
+      <p class="muted tiny">Para buscar Shorts virales. <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Activar API</a> · <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Crear clave</a></p>
+
+      <label class="label small" for="setGem">Gemini API key <span class="muted">(opcional)</span></label>
+      <input id="setGem" type="password" autocomplete="off" placeholder="AIza...">
+      <p class="muted tiny">Ideas con IA. Cuando se agota el cupo gratis, la app sigue sola con plantillas. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Crear clave gratis</a></p>
+
+      <div class="row">
+        <div class="grow">
+          <label class="label small" for="setModel">Modelo Gemini</label>
+          <input id="setModel" type="text" placeholder="gemini-2.5-flash">
+        </div>
+        <div style="width:90px">
+          <label class="label small" for="setRegion">País</label>
+          <input id="setRegion" type="text" maxlength="2" placeholder="AR">
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="setGround"> Investigar tendencias actuales en Google (recomendado)</label>
+      <label class="check"><input type="checkbox" id="setTplOnly"> Usar solo plantillas (sin IA)</label>
+
+      <h3>Cuentas</h3>
+      <p class="muted small">El contexto es lo que la IA sabe de cada cuenta. Cuanto más detallado, mejores ideas.</p>
+      <div id="accountsEdit"></div>
+      <button type="button" id="btnAddAccount" class="btn ghost">+ Agregar cuenta</button>
+
+      <h3>Respaldo</h3>
+      <p class="muted small">Los guardados viven en este navegador. Exportalos para pasarlos a otro dispositivo.</p>
+      <div class="row">
+        <button type="button" id="btnExport" class="btn ghost">Exportar</button>
+        <label class="btn ghost file-btn">Importar<input id="fileImport" type="file" accept="application/json" hidden></label>
+      </div>
+
+      <div class="dialog-foot">
+        <button value="cancel" class="btn ghost">Cancelar</button>
+        <button type="button" id="btnSaveSettings" class="btn primary">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- REPRODUCTOR -->
+  <dialog id="dlgPlayer" class="dialog player">
+    <div class="dialog-inner">
+      <div class="dialog-head">
+        <h2 id="playerTitle" class="clamp2"></h2>
+        <button id="btnClosePlayer" class="icon-btn" aria-label="Cerrar">✕</button>
+      </div>
+      <div id="playerFrame" class="player-frame"></div>
+      <div id="playerActions" class="row wrap"></div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="js/templates.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
